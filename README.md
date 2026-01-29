@@ -1,6 +1,38 @@
 # Valerix E-Commerce Microservices Platform
 
+<div align="center">
+
+## 🌐 **[✨ LIVE DEMO - CLICK HERE ✨](https://thou-angels-let-descending.trycloudflare.com)**
+
+[![Live Demo](https://img.shields.io/badge/🚀_LIVE_DEMO-Click_Here-brightgreen?style=for-the-badge&logo=rocket)](https://thou-angels-let-descending.trycloudflare.com)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-Deployed-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)](https://thou-angels-let-descending.trycloudflare.com)
+[![Digital Ocean](https://img.shields.io/badge/Digital_Ocean-Production-0080FF?style=for-the-badge&logo=digitalocean&logoColor=white)](https://thou-angels-let-descending.trycloudflare.com)
+
+**🔥 Production-ready microservices platform deployed on Digital Ocean Kubernetes 🔥**
+
+</div>
+
+---
+
 🏆 **Champion-Level Microservices Architecture for BUET Fest Hackathon**
+
+---
+
+## 🌐 **LIVE DEMO**
+
+### **🚀 [VIEW LIVE APPLICATION](https://thou-angels-let-descending.trycloudflare.com)**
+
+**Our application is deployed and running on Digital Ocean Kubernetes!**
+
+- ✅ **Production-ready deployment** on Kubernetes
+- ✅ **Real-time monitoring** with Prometheus & Grafana
+- ✅ **Chaos engineering** capabilities built-in
+- ✅ **CI/CD pipeline** with GitHub Actions
+- ✅ **Accessible anywhere** in the world
+
+**👉 [Click here to access the live application](https://thou-angels-let-descending.trycloudflare.com) 👈**
+
+---
 
 ## Architecture Overview
 
@@ -14,6 +46,21 @@ This is a production-grade microservices platform featuring:
 - **Kubernetes**: Full orchestration with health checks and auto-scaling
 - **Prometheus + Grafana**: Real-time monitoring and alerting
 - **CI/CD**: Automated deployment via GitHub Actions
+
+---
+
+## 🎯 Quick Access
+
+| Resource | Link | Description |
+|----------|------|-------------|
+| **🌐 Live Application** | **[https://thou-angels-let-descending.trycloudflare.com](https://thou-angels-let-descending.trycloudflare.com)** | **Production deployment** |
+| 📊 Demo Guide | [DEMO-GUIDE.md](DEMO-GUIDE.md) | Complete demo walkthrough |
+| ⚡ Quick Reference | [DEMO-QUICKREF.md](DEMO-QUICKREF.md) | 5-minute demo script |
+| 🌐 Public URL Setup | [PUBLIC-URL.md](PUBLIC-URL.md) | How we made it live |
+| 🏗️ Architecture | [ARCHITECTURE.md](ARCHITECTURE.md) | System design details |
+| 🚀 Deployment | [DEPLOYMENT.md](DEPLOYMENT.md) | K8s deployment guide |
+
+---
 
 ## Key Features
 
