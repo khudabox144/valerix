@@ -1,0 +1,99 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: valerix
+spec:
+  # Run daily at midnight
+  schedule: "0 0 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: backup
+            image: postgres:15-alpine
+            env:
+            - name: PGHOST
+              value: "postgres.valerix.svc.cluster.local"
+            - name: PGPORT
+              value: "5432"
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: BACKUP_DIR
+              value: "/backups"
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              
+              echo "Starting backup at $(date)"
+              
+              # Create backup directory
+              mkdir -p $BACKUP_DIR
+              
+              # Backup both databases
+              echo "Backing up order_db..."
+              pg_dump -h $PGHOST -p $PGPORT -U $PGUSER -d order_db -F c -f $BACKUP_DIR/order_db_$(date +%Y%m%d).dump
+              
+              echo "Backing up inventory_db..."
+              pg_dump -h $PGHOST -p $PGPORT -U $PGUSER -d inventory_db -F c -f $BACKUP_DIR/inventory_db_$(date +%Y%m%d).dump
+              
+              # Create compressed archive - THIS IS THE SINGLE BACKUP CALL
+              echo "Creating compressed archive..."
+              cd $BACKUP_DIR
+              tar -czf valerix_backup_$(date +%Y%m%d_%H%M%S).tar.gz *.dump
+              
+              # Clean up individual dumps
+              rm -f *.dump
+              
+              echo "Backup completed successfully at $(date)"
+              echo "Archive: valerix_backup_$(date +%Y%m%d_%H%M%S).tar.gz"
+              
+              # Here you would upload to Digital Ocean Spaces (S3 compatible)
+              # This is the ONLY network call per day
+              # Uncomment and configure when ready:
+              
+              # apk add --no-cache aws-cli
+              # aws configure set aws_access_key_id $DO_SPACES_KEY
+              # aws configure set aws_secret_access_key $DO_SPACES_SECRET
+              # aws s3 cp valerix_backup_$(date +%Y%m%d_%H%M%S).tar.gz \
+              #   s3://valerix-backups/ \
+              #   --endpoint-url https://nyc3.digitaloceanspaces.com
+              
+              # For demo purposes, just list the files
+              ls -lh $BACKUP_DIR
+              
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backups
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: backup-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-pvc
+  namespace: valerix
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: do-block-storage

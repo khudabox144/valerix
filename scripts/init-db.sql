@@ -1,0 +1,60 @@
+-- Initialize separate databases for microservices
+-- This respects logical boundaries while using single Postgres instance
+
+-- Create order database
+CREATE DATABASE order_db;
+
+-- Create inventory database
+CREATE DATABASE inventory_db;
+
+-- Connect to order_db and create tables
+\c order_db;
+
+CREATE TABLE IF NOT EXISTS orders (
+    id SERIAL PRIMARY KEY,
+    order_id VARCHAR(36) UNIQUE NOT NULL,
+    item_id VARCHAR(100) NOT NULL,
+    quantity INTEGER NOT NULL,
+    status VARCHAR(50) DEFAULT 'pending',
+    idempotency_key VARCHAR(36) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_orders_order_id ON orders(order_id);
+CREATE INDEX idx_orders_idempotency_key ON orders(idempotency_key);
+CREATE INDEX idx_orders_status ON orders(status);
+
+-- Connect to inventory_db and create tables
+\c inventory_db;
+
+CREATE TABLE IF NOT EXISTS inventory (
+    id SERIAL PRIMARY KEY,
+    item_id VARCHAR(100) UNIQUE NOT NULL,
+    item_name VARCHAR(255) NOT NULL,
+    quantity INTEGER NOT NULL DEFAULT 0,
+    reserved_quantity INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS inventory_transactions (
+    id SERIAL PRIMARY KEY,
+    item_id VARCHAR(100) NOT NULL,
+    order_id VARCHAR(36) NOT NULL,
+    quantity_change INTEGER NOT NULL,
+    transaction_type VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_inventory_item_id ON inventory(item_id);
+CREATE INDEX idx_transactions_order_id ON inventory_transactions(order_id);
+
+-- Insert sample inventory items
+INSERT INTO inventory (item_id, item_name, quantity) VALUES
+    ('ps5', 'PlayStation 5', 100),
+    ('xbox', 'Xbox Series X', 75),
+    ('switch', 'Nintendo Switch', 150),
+    ('laptop', 'Gaming Laptop', 50),
+    ('monitor', '4K Gaming Monitor', 200)
+ON CONFLICT (item_id) DO NOTHING;

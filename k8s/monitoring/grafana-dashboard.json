@@ -1,0 +1,218 @@
+{
+  "dashboard": {
+    "title": "Valerix Platform Dashboard",
+    "tags": ["valerix", "microservices", "e-commerce"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Service Health Status",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "up{job=\"order-service\"}",
+            "legendFormat": "Order Service",
+            "refId": "A"
+          },
+          {
+            "expr": "up{job=\"inventory-service\"}",
+            "legendFormat": "Inventory Service",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"value": 0, "text": "DOWN", "color": "red"},
+              {"value": 1, "text": "UP", "color": "green"}
+            ],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 1, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Average Response Time (30s window)",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "avg(rate(http_request_duration_seconds_sum{job=\"order-service\"}[30s]) / rate(http_request_duration_seconds_count{job=\"order-service\"}[30s]))",
+            "legendFormat": "Avg Response Time",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "red"}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          }
+        },
+        "options": {
+          "colorMode": "background"
+        }
+      },
+      {
+        "id": 3,
+        "title": "HTTP Request Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(http_request_duration_seconds_count{job=\"order-service\"}[1m])) by (route)",
+            "legendFormat": "{{route}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "reqps", "label": "Requests/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Circuit Breaker State",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "circuit_breaker_state{service=\"inventory\"}",
+            "legendFormat": "Circuit State",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"value": 0, "text": "CLOSED", "color": "green"},
+              {"value": 1, "text": "OPEN", "color": "red"},
+              {"value": 2, "text": "HALF-OPEN", "color": "yellow"}
+            ],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "red"},
+                {"value": 2, "color": "yellow"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Chaos Engineering Status",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "inventory_chaos_enabled{type=\"latency\"}",
+            "legendFormat": "Latency Gremlin",
+            "refId": "A"
+          },
+          {
+            "expr": "inventory_chaos_enabled{type=\"crash\"}",
+            "legendFormat": "Crash Gremlin",
+            "refId": "B"
+          },
+          {
+            "expr": "inventory_chaos_enabled{type=\"partial_failure\"}",
+            "legendFormat": "Partial Failure",
+            "refId": "C"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Order Processing Duration",
+        "type": "heatmap",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "sum(rate(order_processing_duration_seconds_bucket[5m])) by (le)",
+            "format": "heatmap",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Idempotency Cache Hit Rate",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+        "targets": [
+          {
+            "expr": "rate(idempotency_cache_hits_total[5m]) / (rate(idempotency_cache_hits_total[5m]) + rate(idempotency_cache_misses_total[5m])) * 100",
+            "legendFormat": "Hit Rate %",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 50, "color": "yellow"},
+                {"value": 80, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Inventory Stock Levels",
+        "type": "bargauge",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32},
+        "targets": [
+          {
+            "expr": "inventory_stock_level",
+            "legendFormat": "{{item_id}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 20, "color": "yellow"},
+                {"value": 50, "color": "green"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient"
+        }
+      }
+    ],
+    "refresh": "5s",
+    "time": {
+      "from": "now-15m",
+      "to": "now"
+    }
+  }
+}

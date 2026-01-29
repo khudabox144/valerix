@@ -1,0 +1,135 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: registry.digitalocean.com/valerix
+  DO_REGION: nyc1
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Log in to DigitalOcean Container Registry
+        run: doctl registry login --expiry-seconds 1200
+
+      - name: Build Order Service
+        run: |
+          docker build \
+            -t ${{ env.REGISTRY }}/order-service:${{ github.sha }} \
+            -t ${{ env.REGISTRY }}/order-service:latest \
+            ./services/order-service
+
+      - name: Push Order Service
+        run: |
+          docker push ${{ env.REGISTRY }}/order-service:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/order-service:latest
+
+      - name: Build Inventory Service
+        run: |
+          docker build \
+            -t ${{ env.REGISTRY }}/inventory-service:${{ github.sha }} \
+            -t ${{ env.REGISTRY }}/inventory-service:latest \
+            ./services/inventory-service
+
+      - name: Push Inventory Service
+        run: |
+          docker push ${{ env.REGISTRY }}/inventory-service:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/inventory-service:latest
+
+      - name: Build Frontend
+        run: |
+          docker build \
+            -t ${{ env.REGISTRY }}/frontend:${{ github.sha }} \
+            -t ${{ env.REGISTRY }}/frontend:latest \
+            ./services/frontend
+
+      - name: Push Frontend
+        run: |
+          docker push ${{ env.REGISTRY }}/frontend:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/frontend:latest
+
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Save DigitalOcean kubeconfig
+        run: doctl kubernetes cluster kubeconfig save valerix-prod
+
+      - name: Deploy infrastructure (first time only)
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/infrastructure/ || true
+
+      - name: Wait for database
+        run: |
+          kubectl wait --for=condition=ready pod -l app=postgres -n valerix --timeout=300s || true
+
+      - name: Deploy services
+        run: |
+          kubectl apply -f k8s/services/
+          kubectl apply -f k8s/ingress.yaml
+
+      - name: Restart deployments (to pick up latest images)
+        run: |
+          kubectl rollout restart deployment/order-service -n valerix
+          kubectl rollout restart deployment/inventory-service -n valerix
+          kubectl rollout restart deployment/frontend -n valerix
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/order-service -n valerix --timeout=300s
+          kubectl rollout status deployment/inventory-service -n valerix --timeout=300s
+          kubectl rollout status deployment/frontend -n valerix --timeout=300s
+
+      - name: Verify deployment
+        run: |
+          kubectl get pods -n valerix
+          kubectl get services -n valerix
+          kubectl get ingress -n valerix
+
+  chaos-test:
+    name: Run Chaos Tests
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install K6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Run load tests
+        run: |
+          cd chaos-scripts
+          k6 run --vus 50 --duration 30s load-test.js
+        continue-on-error: true
