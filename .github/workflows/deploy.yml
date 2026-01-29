@@ -16,8 +16,6 @@ jobs:
   build-and-push:
     name: Build and Push Docker Images
     runs-on: ubuntu-latest
-    # Disabled until registry is created - to enable, create registry with: doctl registry create valerix --subscription-tier basic
-    if: false
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
