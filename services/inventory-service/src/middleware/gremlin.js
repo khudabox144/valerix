@@ -12,6 +12,10 @@ const gremlinMiddleware = async (req, res, next) => {
     const chaosConfig = await redis.get('chaos_config');
     
     if (!chaosConfig) {
+      // Reset all chaos metrics to 0 when disabled
+      inventoryChaosEnabled.set({ type: 'latency' }, 0);
+      inventoryChaosEnabled.set({ type: 'crash' }, 0);
+      inventoryChaosEnabled.set({ type: 'partial_failure' }, 0);
       return next();
     }
 
@@ -26,7 +30,7 @@ const gremlinMiddleware = async (req, res, next) => {
         path: req.path 
       });
 
-      inventoryChaosEnabled.set({ type: 'latency' }, 1);
+      inventoryChaosEnabled.set({ type: 'latency' }, delay);
       inventoryChaosEvents.inc({ type: 'latency' });
 
       await new Promise(resolve => setTimeout(resolve, delay));

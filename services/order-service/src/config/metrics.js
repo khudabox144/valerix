@@ -49,6 +49,24 @@ const ordersCreated = new client.Counter({
   registers: [register],
 });
 
+const gremlinLatency = new client.Gauge({
+  name: 'gremlin_latency_ms',
+  help: 'Current chaos latency injection in milliseconds',
+  registers: [register],
+});
+
+const gremlinCrashRate = new client.Gauge({
+  name: 'gremlin_crash_rate',
+  help: 'Current chaos crash rate percentage (0-100)',
+  registers: [register],
+});
+
+const gremlinPartialFailure = new client.Gauge({
+  name: 'gremlin_partial_failure_rate',
+  help: 'Current chaos partial failure rate percentage (0-100)',
+  registers: [register],
+});
+
 module.exports = {
   register,
   httpRequestDuration,
@@ -57,4 +75,7 @@ module.exports = {
   idempotencyHits,
   idempotencyMisses,
   ordersCreated,
+  gremlinLatency,
+  gremlinCrashRate,
+  gremlinPartialFailure,
 };
