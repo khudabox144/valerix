@@ -4,29 +4,17 @@ metadata:
   name: valerix-ingress
   namespace: valerix
   annotations:
-    kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
 spec:
+  ingressClassName: nginx
   rules:
-  - host: valerix.example.com  # Replace with your domain
-    http:
+  - http:
       paths:
-      # Frontend
-      - path: /()(.*)
-        pathType: Prefix
-        backend:
-          service:
-            name: frontend
-            port:
-              number: 3000
       # Order Service API
-      - path: /order(/|$)(.*)
+      - path: /order
         pathType: Prefix
         backend:
           service:
@@ -34,13 +22,21 @@ spec:
             port:
               number: 3001
       # Inventory Service API
-      - path: /inventory(/|$)(.*)
+      - path: /inventory
         pathType: Prefix
         backend:
           service:
             name: inventory-service
             port:
               number: 3002
+      # Frontend (must be last - catch all)
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 3000
   tls:
   - hosts:
     - valerix.example.com
