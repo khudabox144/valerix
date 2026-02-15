@@ -50,11 +50,18 @@ CREATE TABLE IF NOT EXISTS inventory_transactions (
 CREATE INDEX idx_inventory_item_id ON inventory(item_id);
 CREATE INDEX idx_transactions_order_id ON inventory_transactions(order_id);
 
--- Insert sample inventory items
+-- Insert sample inventory items (matches frontend product catalog)
 INSERT INTO inventory (item_id, item_name, quantity) VALUES
     ('ps5', 'PlayStation 5', 100),
     ('xbox', 'Xbox Series X', 75),
     ('switch', 'Nintendo Switch', 150),
     ('laptop', 'Gaming Laptop', 50),
-    ('monitor', '4K Gaming Monitor', 200)
+    ('monitor', '4K Gaming Monitor', 200),
+    ('headset', 'Gaming Headset', 75),
+    ('keyboard', 'Mechanical Keyboard', 55),
+    ('mouse', 'Gaming Mouse', 80),
+    ('chair', 'Gaming Chair', 20),
+    ('webcam', '4K Webcam', 35),
+    ('microphone', 'Studio Microphone', 25),
+    ('controller', 'Elite Controller', 42)
 ON CONFLICT (item_id) DO NOTHING;

@@ -129,12 +129,12 @@ function textSummary(data, options) {
   summary += `${indent}${'='.repeat(50)}\n\n`;
 
   summary += `${indent}Checks:\n`;
-  for (const [name, value] of Object.entries(data.metrics.checks.values)) {
-    const passes = value.passes || 0;
-    const fails = value.fails || 0;
+  if (data.metrics.checks && data.metrics.checks.values) {
+    const passes = data.metrics.checks.values.passes || 0;
+    const fails = data.metrics.checks.values.fails || 0;
     const total = passes + fails;
     const rate = total > 0 ? (passes / total * 100).toFixed(2) : 0;
-    summary += `${indent}  ${name}: ${rate}% (${passes}/${total})\n`;
+    summary += `${indent}  Passed: ${rate}% (${passes}/${total})\n`;
   }
 
   summary += `\n${indent}HTTP Metrics:\n`;

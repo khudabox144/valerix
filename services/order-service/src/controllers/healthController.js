@@ -25,9 +25,6 @@ const healthCheck = async (req, res) => {
       database: dbHealth.details || {},
       redis: redisHealth.details || {},
     },
-    features: {
-      gpt_model: process.env.ENABLE_GPT5 === 'true' ? 'gpt-5' : undefined,
-    },
   };
 
   if (!dbHealth.healthy) {
@@ -76,9 +73,6 @@ const deepHealthCheck = async (req, res) => {
       database: dbHealth.healthy ? 'up' : 'down',
       redis: redisHealth.healthy ? 'up' : 'down',
       inventory_service: inventoryHealth.healthy ? 'up' : 'down',
-    },
-    features: {
-      gpt_model: process.env.ENABLE_GPT5 === 'true' ? 'gpt-5' : undefined,
     },
   };
 

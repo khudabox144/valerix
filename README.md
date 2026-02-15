@@ -1,383 +1,466 @@
-# Valerix E-Commerce Microservices Platform
-
 <div align="center">
 
-## 🌐 **[✨ LIVE DEMO - CLICK HERE ✨](https://thou-angels-let-descending.trycloudflare.com)**
+# ⚡ Valerix — Resilient E-Commerce Microservices Platform
 
-[![Live Demo](https://img.shields.io/badge/🚀_LIVE_DEMO-Click_Here-brightgreen?style=for-the-badge&logo=rocket)](https://thou-angels-let-descending.trycloudflare.com)
-[![Kubernetes](https://img.shields.io/badge/Kubernetes-Deployed-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)](https://thou-angels-let-descending.trycloudflare.com)
-[![Digital Ocean](https://img.shields.io/badge/Digital_Ocean-Production-0080FF?style=for-the-badge&logo=digitalocean&logoColor=white)](https://thou-angels-let-descending.trycloudflare.com)
+**A production-grade microservices architecture built to survive chaos.**
 
-**🔥 Production-ready microservices platform deployed on Digital Ocean Kubernetes 🔥**
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-Ready-326CE5?style=flat-square&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
+[![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-E6522C?style=flat-square&logo=prometheus&logoColor=white)](https://prometheus.io/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-000000?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-7.2-DC382D?style=flat-square&logo=redis&logoColor=white)](https://redis.io/)
+
+[Quick Start](#-quick-start) · [Architecture](#-architecture) · [API Reference](#-api-reference) · [Chaos Engineering](#-chaos-engineering) · [Deployment](#-deployment)
 
 </div>
 
 ---
 
+## 📋 Table of Contents
 
-
-🏆 **Champion-Level Microservices Architecture for BUET Fest Hackathon**
-
----
-
-## 🌐 **LIVE DEMO**
-
-### **🚀 [VIEW LIVE APPLICATION](https://thou-angels-let-descending.trycloudflare.com)**
-
-**Our application is deployed and running on Digital Ocean Kubernetes!**
-
-- ✅ **Production-ready deployment** on Kubernetes
-- ✅ **Real-time monitoring** with Prometheus & Grafana
-- ✅ **Chaos engineering** capabilities built-in
-- ✅ **CI/CD pipeline** with GitHub Actions
-- ✅ **Accessible anywhere** in the world
-
-**👉 [Click here to access the live application](https://thou-angels-let-descending.trycloudflare.com) 👈**
+- [Problem Statement](#-problem-statement)
+- [Key Features](#-key-features)
+- [Architecture](#-architecture)
+- [Quick Start](#-quick-start)
+- [Project Structure](#-project-structure)
+- [API Reference](#-api-reference)
+- [Resilience Patterns](#-resilience-patterns)
+- [Chaos Engineering](#-chaos-engineering)
+- [Health Monitoring](#-health-monitoring)
+- [Deployment](#-deployment)
+- [Tech Stack](#-tech-stack)
 
 ---
 
-## Architecture Overview
+## 🎯 Problem Statement
 
-This is a production-grade microservices platform featuring:
+Valerix operates a massive e-commerce platform that was built as a **monolithic application**.
+A single failure — a slow database query, a network hiccup — would cascade and take down the
+entire order flow for thousands of users.
 
-- **Order Service**: Handles order processing with circuit breaker and idempotency
-- **Inventory Service**: Manages stock with chaos engineering capabilities
-- **Frontend**: Next.js dashboard for order management and monitoring
-- **Redis Streams**: Event-driven async communication
-- **PostgreSQL**: Separate databases for each service
-- **Kubernetes**: Full orchestration with health checks and auto-scaling
-- **Prometheus + Grafana**: Real-time monitoring and alerting
-- **CI/CD**: Automated deployment via GitHub Actions
+**This project decomposes that monolith into resilient microservices** that can:
 
----
-
-## 🎯 Quick Access
-
-| Resource | Link | Description |
-|----------|------|-------------|
-| **🌐 Live Application** | **[https://thou-angels-let-descending.trycloudflare.com](https://thou-angels-let-descending.trycloudflare.com)** | **Production deployment** |
-| 📊 Demo Guide | [DEMO-GUIDE.md](DEMO-GUIDE.md) | Complete demo walkthrough |
-| ⚡ Quick Reference | [DEMO-QUICKREF.md](DEMO-QUICKREF.md) | 5-minute demo script |
-| 🌐 Public URL Setup | [PUBLIC-URL.md](PUBLIC-URL.md) | How we made it live |
-| 🏗️ Architecture | [ARCHITECTURE.md](ARCHITECTURE.md) | System design details |
-| 🚀 Deployment | [DEPLOYMENT.md](DEPLOYMENT.md) | K8s deployment guide |
+- Survive partial failures (Schrödinger's Warehouse problem)
+- Handle inventory service latency without freezing orders
+- Process orders exactly once even during retries and crashes
+- Self-heal through circuit breakers and fallback queues
+- Be observed in real-time through health dashboards and Prometheus metrics
 
 ---
 
-## Key Features
+## ✨ Key Features
 
-### 1. Resilience Patterns
-- **Circuit Breaker** (Opossum): Prevents cascade failures
-- **Idempotency Keys**: Handles network failures and duplicate requests
-- **Chaos Engineering**: Built-in latency and crash simulation
-- **Health Checks**: Deep dependency verification
+| Feature | Description |
+|---|---|
+| **Microservice Architecture** | Separate Order & Inventory services with independent databases |
+| **Circuit Breaker** | [Opossum](https://github.com/nodeshift/opossum)-based circuit breaker protects the Order Service when Inventory is slow/down |
+| **Idempotency** | Every order request requires an `Idempotency-Key` header — safe to retry without duplicates |
+| **Schrödinger's Warehouse** | Handles the case where DB commits but response fails — solved via server-side idempotency checks |
+| **Gremlin Middleware** | Configurable chaos injection: latency, crashes, and partial failures — all toggled at runtime via API |
+| **Health Endpoints** | `/health` verifies downstream dependencies (DB tables, Redis, peer services) — not just `200 OK` |
+| **Visual Alert Dashboard** | Response time monitor turns 🟢→🔴 when 30-second rolling average exceeds 1 second |
+| **Prometheus + Grafana** | Custom metrics: circuit breaker state, chaos events, order durations, stock levels |
+| **Redis Streams** | Failed inventory updates are queued for async retry processing |
+| **Kubernetes-Ready** | Full K8s manifests: StatefulSets, ConfigMaps, Secrets, Ingress, CronJobs |
+| **Automated Load Testing** | k6 scripts for load testing and chaos testing with summary reports |
+| **Backup Strategy** | Kubernetes CronJob for daily PostgreSQL backups |
 
-### 2. The "Schrödinger's Warehouse" Solution
-Handles partial failures where DB commits but response fails:
-- UUID-based idempotency keys
-- Redis-backed response caching
-- Automatic retry handling
-- Zero duplicate orders
+---
 
-### 3. Observability
-- Prometheus metrics collection
-- Grafana visual dashboards
-- Latency-based color alerts (Green → Red when >1s)
-- Real-time health monitoring
+## 🏗 Architecture
 
-## Project Structure
+```
+┌─────────────┐       ┌─────────────────┐       ┌──────────────────┐
+│   Frontend   │──────▶│  Order Service   │──────▶│ Inventory Service │
+│  (Next.js)   │       │   (Express.js)   │       │   (Express.js)    │
+│  Port 3000   │       │   Port 3001      │       │   Port 3002       │
+└─────────────┘       └────────┬─────────┘       └────────┬──────────┘
+                               │                          │
+                    ┌──────────┴──────────┐    ┌──────────┴──────────┐
+                    │   order_db (PG)     │    │  inventory_db (PG)  │
+                    └─────────────────────┘    └─────────────────────┘
+                               │                          │
+                               └──────────┬───────────────┘
+                                          │
+                                    ┌─────┴─────┐
+                                    │   Redis    │
+                                    │ (Streams + │
+                                    │  Caching)  │
+                                    └─────┬─────┘
+                                          │
+                              ┌───────────┴───────────┐
+                              │     Prometheus        │
+                              │   ──▶ Grafana         │
+                              └───────────────────────┘
+```
+
+**Data flow when an order is placed:**
+
+1. Frontend sends `POST /api/orders` with an `Idempotency-Key` header
+2. Order Service checks Redis idempotency cache → returns cached response if duplicate
+3. Order is persisted in `order_db` with status `pending`
+4. Order Service calls Inventory Service **through a circuit breaker** (3 s timeout)
+5. If inventory responds → stock deducted, order marked `confirmed`
+6. If circuit breaker opens → order marked `queued`, pushed to Redis Stream for async retry
+7. If Schrödinger failure occurs → Inventory's own idempotency check prevents double-deduction on retry
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- [Docker](https://www.docker.com/) & Docker Compose
+- [Node.js 18+](https://nodejs.org/) (for local dev without Docker)
+
+### Option A: Docker Compose (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/<your-username>/valerix.git
+cd valerix
+
+# Copy environment variables
+cp .env.example .env
+
+# Start everything (PostgreSQL, Redis, Services, Frontend, Prometheus, Grafana)
+docker-compose up --build
+```
+
+Once running, open:
+
+| Service | URL |
+|---|---|
+| **Frontend** | http://localhost:3000 |
+| **Order Service API** | http://localhost:3001 |
+| **Inventory Service API** | http://localhost:3002 |
+| **Prometheus** | http://localhost:9090 |
+| **Grafana** | http://localhost:3100 (admin / admin123) |
+
+### Option B: Local Development
+
+```bash
+# Start only infrastructure
+docker-compose up -d postgres redis
+
+# Wait ~10 seconds for DBs to initialize, then in separate terminals:
+
+# Terminal 1 — Order Service
+cd services/order-service && npm install && npm run dev
+
+# Terminal 2 — Inventory Service
+cd services/inventory-service && npm install && npm run dev
+
+# Terminal 3 — Frontend
+cd services/frontend && npm install && npm run dev
+```
+
+---
+
+## 📁 Project Structure
 
 ```
 valerix/
 ├── services/
-│   ├── order-service/       # Order processing microservice
-│   ├── inventory-service/   # Inventory management with chaos
-│   └── frontend/            # Next.js UI
-├── k8s/                     # Kubernetes manifests
-│   ├── infrastructure/      # Postgres, Redis, Monitoring
-│   ├── services/            # Service deployments
-│   └── ingress.yaml         # Nginx routing
-├── .github/workflows/       # CI/CD pipelines
-├── chaos-scripts/           # K6 load testing
-└── docker-compose.yml       # Local development
+│   ├── order-service/          # Order processing microservice
+│   │   ├── src/
+│   │   │   ├── controllers/    # Route handlers (orderController, healthController)
+│   │   │   ├── middleware/      # Idempotency middleware
+│   │   │   ├── services/       # Circuit breaker wrapper
+│   │   │   └── config/         # DB, Redis, Logger, Prometheus metrics
+│   │   └── Dockerfile
+│   ├── inventory-service/      # Stock management microservice
+│   │   ├── src/
+│   │   │   ├── controllers/    # Inventory, health, chaos admin handlers
+│   │   │   ├── middleware/      # Gremlin (chaos injection) middleware
+│   │   │   └── config/         # DB, Redis, Logger, Prometheus metrics
+│   │   └── Dockerfile
+│   └── frontend/               # Next.js 14 dashboard
+│       ├── components/         # HealthDashboard, ChaosControls, etc.
+│       ├── pages/              # App pages
+│       └── Dockerfile
+├── scripts/
+│   ├── init-db.sql             # Database schema & seed data
+│   ├── deploy.sh               # DigitalOcean K8s deployment
+│   └── local-setup.sh          # Local dev bootstrapper
+├── chaos-scripts/              # k6 load & chaos test scripts
+├── k8s/                        # Kubernetes manifests
+├── monitoring/                 # Prometheus config
+├── grafana/                    # Grafana provisioning (dashboards + datasources)
+├── docker-compose.yml          # Full local stack
+└── .env.example                # Environment variable template
 ```
 
-## Quick Start (Local Development)
+---
 
-### Prerequisites
-- Docker & Docker Compose
-- Node.js 18+
-- kubectl & doctl (for deployment)
+## 📡 API Reference
 
-### 1. Start Infrastructure
+### Order Service — `http://localhost:3001`
+
+| Method | Endpoint | Headers | Description |
+|--------|----------|---------|-------------|
+| `POST` | `/api/orders` | `Idempotency-Key: <uuid>` | Create a new order |
+| `GET` | `/api/orders/:id` | — | Get order by ID |
+| `GET` | `/api/orders` | — | List recent orders (last 100) |
+| `GET` | `/health` | — | Basic health (DB + Redis) |
+| `GET` | `/health/deep` | — | Deep health (includes Inventory Service) |
+| `GET` | `/metrics` | — | Prometheus metrics |
+
+**Create Order example:**
+
 ```bash
-docker-compose up -d postgres redis
+curl -X POST http://localhost:3001/api/orders \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{"item_id": "ps5", "quantity": 2}'
 ```
 
-### 2. Run Services
-```bash
-# Terminal 1: Order Service
-cd services/order-service
-npm install
-npm run dev
+**Possible responses:**
 
-# Terminal 2: Inventory Service
-cd services/inventory-service
-npm install
-npm run dev
+| Status | Meaning |
+|--------|---------|
+| `201` | Order confirmed — inventory deducted successfully |
+| `202` | Order queued — circuit breaker active, will process later via Redis Stream |
+| `400` | Missing `Idempotency-Key` header or invalid body |
+| `422` | Inventory error (insufficient stock, item not found) |
+| `500` | Internal server error |
 
-# Terminal 3: Frontend
-cd services/frontend
-npm install
-npm run dev
+### Inventory Service — `http://localhost:3002`
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/inventory/deduct` | Deduct stock (called by Order Service) |
+| `GET` | `/api/inventory/:item_id` | Get stock for an item |
+| `GET` | `/api/inventory` | List all inventory |
+| `POST` | `/api/admin/chaos` | Enable chaos injection |
+| `GET` | `/api/admin/chaos` | Get current chaos config |
+| `DELETE` | `/api/admin/chaos` | Disable all chaos |
+| `GET` | `/health` | Health check (DB tables + Redis) |
+| `GET` | `/metrics` | Prometheus metrics |
+
+---
+
+## 🛡 Resilience Patterns
+
+### 1. Circuit Breaker (Opossum)
+
+When the Inventory Service is slow or failing, the circuit breaker prevents cascading failures:
+
+```
+CLOSED ──(50% failures)──▶ OPEN ──(10s cooldown)──▶ HALF-OPEN ──(success)──▶ CLOSED
+                                                         │
+                                                     (failure)
+                                                         │
+                                                         ▼
+                                                       OPEN
 ```
 
-### 3. Access Services
-- Frontend: http://localhost:3000
-- Order API: http://localhost:3001
-- Inventory API: http://localhost:3002
+- **Timeout:** 3 seconds per request
+- **Error threshold:** 50% failure rate opens the circuit
+- **Reset timeout:** 10 seconds before trying again
+- **Fallback:** Order is saved as `queued` and pushed to Redis Stream
 
-## API Documentation
+### 2. Idempotency Keys
 
-### Order Service (Port 3001)
+Every `POST /api/orders` must include an `Idempotency-Key` header. The middleware:
 
-#### Create Order
-```bash
-POST /api/orders
-Headers: 
-  Idempotency-Key: <uuid>
-  Content-Type: application/json
-Body:
-{
-  "item_id": "ps5",
-  "quantity": 2
-}
-```
+1. Checks Redis for a cached response under that key
+2. If found → returns the cached response (no duplicate processing)
+3. If not → processes the request and caches the response for 24 hours
 
-#### Get Order
-```bash
-GET /api/orders/:id
-```
+This solves **the Schrödinger's Warehouse problem**: even if the Inventory Service commits
+to DB but crashes before responding, the Order Service can safely retry. The Inventory Service
+also performs a server-side idempotency check on `order_id` in the `inventory_transactions`
+table — preventing double-deduction at the database level.
 
-#### Health Check
-```bash
-GET /health        # Basic check
-GET /health/deep   # Check all dependencies
-```
+### 3. Gremlin Middleware (Chaos Injection)
 
-### Inventory Service (Port 3002)
+The Inventory Service has a middleware that reads chaos configuration from Redis and
+introduces controlled failures:
 
-#### Deduct Stock
-```bash
-POST /api/inventory/deduct
-Body:
-{
-  "item_id": "ps5",
-  "quantity": 2
-}
-```
+| Chaos Type | What It Does |
+|---|---|
+| **Latency** | Adds configurable delay (1–15 seconds) before processing |
+| **Crash** | Randomly returns 500, 503, or destroys the socket |
+| **Partial Failure** | DB commits successfully, then response fails — the Schrödinger scenario |
 
-#### Enable Chaos Mode (Demo Feature)
-```bash
-POST /api/admin/chaos
-Body:
-{
-  "latency": true,          # Enable 5s delays
-  "crash_rate": 0.3         # 30% failure rate
-}
-```
+---
 
-#### Check Stock
-```bash
-GET /api/inventory/:item_id
-```
+## 🔥 Chaos Engineering
 
-## Chaos Engineering Demo
+### Quick Demo (from the UI)
 
-To demonstrate resilience during presentation:
+1. Open the **Chaos Control** tab in the frontend
+2. Click a preset: **Mild**, **Moderate**, or **Extreme**
+3. Switch to the **Health** tab — watch the alert banner turn red
+4. Create orders on the **Products** tab — they still succeed via circuit breaker fallback
+5. Click **Disable All Chaos** — system recovers to green
+
+### CLI Demo
 
 ```bash
-# 1. Enable chaos mode
+# Enable moderate chaos
 curl -X POST http://localhost:3002/api/admin/chaos \
   -H "Content-Type: application/json" \
-  -d '{"latency": true, "crash_rate": 0.5}'
+  -d '{"latency": true, "latency_ms": 5000, "crash_rate": 0.3, "partial_failure_rate": 0.2}'
 
-# 2. Watch Grafana dashboard turn RED (latency spike)
-
-# 3. Create orders - they still work!
+# Create an order (should get 201 or 202 depending on circuit state)
 curl -X POST http://localhost:3001/api/orders \
-  -H "Idempotency-Key: $(uuidgen)" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: test-$(date +%s)" \
   -d '{"item_id": "ps5", "quantity": 1}'
 
-# 4. Kill inventory pod
-kubectl delete pod -l app=inventory-service
-
-# 5. Orders still succeed (circuit breaker fallback)
+# Disable chaos
+curl -X DELETE http://localhost:3002/api/admin/chaos
 ```
 
-## Kubernetes Deployment
+### Automated Load Testing (k6)
 
-### 1. Setup Digital Ocean Kubernetes
 ```bash
-# Create cluster (2 nodes, 4GB RAM each)
-doctl kubernetes cluster create valerix-prod \
-  --region nyc1 \
-  --node-pool "name=worker-pool;size=s-2vcpu-4gb;count=2"
+# Install k6: https://k6.io/docs/getting-started/installation/
 
-# Get credentials
-doctl kubernetes cluster kubeconfig save valerix-prod
+# Normal load test
+k6 run chaos-scripts/load-test.js
+
+# Chaos test (auto-enables chaos, runs load, auto-disables)
+k6 run chaos-scripts/chaos-test.js
 ```
 
-### 2. Deploy Infrastructure
-```bash
-# Install Nginx Ingress
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/do/deploy.yaml
+---
 
-# Install Prometheus Stack
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm install monitoring prometheus-community/kube-prometheus-stack
+## 📊 Health Monitoring
 
-# Deploy databases
-kubectl apply -f k8s/infrastructure/
-```
+### Health Endpoint Behavior
 
-### 3. Deploy Services
-```bash
-# Build and push images
-docker build -t registry.digitalocean.com/valerix/order-service:latest ./services/order-service
-docker build -t registry.digitalocean.com/valerix/inventory-service:latest ./services/inventory-service
-docker build -t registry.digitalocean.com/valerix/frontend:latest ./services/frontend
+The `/health` endpoint is **not** a simple `200 OK`. It verifies:
 
-docker push registry.digitalocean.com/valerix/order-service:latest
-docker push registry.digitalocean.com/valerix/inventory-service:latest
-docker push registry.digitalocean.com/valerix/frontend:latest
+- ✅ PostgreSQL connection is alive
+- ✅ The expected tables exist (`orders` / `inventory`)
+- ✅ Tables are queryable
+- ✅ Redis can be pinged and can perform read/write operations
 
-# Deploy to K8s
-kubectl apply -f k8s/services/
-kubectl apply -f k8s/ingress.yaml
-```
+If any check fails, the endpoint returns **503** with detailed error information.
 
-### 4. Access Services
-```bash
-# Get Load Balancer IP
-kubectl get ingress
+The Order Service's `/health/deep` additionally pings the Inventory Service's health endpoint.
 
-# Visit http://<EXTERNAL-IP>
-```
+### Visual Alert Dashboard
 
-## Monitoring & Observability
+The frontend **Health** tab implements a **rolling 30-second average** of Order Service
+response times. The status indicator changes:
 
-### Grafana Dashboard
-```bash
-# Port forward Grafana
-kubectl port-forward svc/monitoring-grafana 3000:80
-
-# Login at http://localhost:3000
-# Default: admin / prom-operator
-```
+| Average Response Time | Color | Status |
+|---|---|---|
+| < 500ms | 🟢 Green | OPTIMAL |
+| 500ms – 1000ms | 🟡 Yellow | WARNING |
+| > 1000ms | 🔴 Red | CRITICAL — alert banner appears |
 
 ### Prometheus Metrics
+
+Key custom metrics exported by both services:
+
+| Metric | Type | Description |
+|---|---|---|
+| `http_request_duration_seconds` | Histogram | Request latency by route |
+| `order_processing_duration_seconds` | Histogram | End-to-end order time |
+| `circuit_breaker_state` | Gauge | 0=closed, 1=open, 2=half-open |
+| `idempotency_cache_hits_total` | Counter | Duplicate request detections |
+| `inventory_chaos_events_total` | Counter | Chaos events by type |
+| `inventory_stock_level` | Gauge | Current stock per item |
+
+---
+
+## ☁️ Deployment
+
+### Option 1: DigitalOcean Kubernetes (Production)
+
+The project includes a full deployment script at [scripts/deploy.sh](scripts/deploy.sh).
+
+**Prerequisites:** `doctl`, `kubectl`, `helm`, Docker
+
 ```bash
-kubectl port-forward svc/monitoring-kube-prometheus-prometheus 9090:9090
-# Visit http://localhost:9090
+# Authenticate with DigitalOcean
+doctl auth init
+
+# Run the deployment script
+chmod +x scripts/deploy.sh
+./scripts/deploy.sh
 ```
 
-### Key Metrics
-- `order_processing_duration_seconds`: Order latency
-- `circuit_breaker_state`: Circuit state (open/closed)
-- `inventory_chaos_enabled`: Chaos mode status
-- `http_request_duration_seconds`: API response times
+The script will:
+1. Create a container registry
+2. Provision a 2-node Kubernetes cluster (~$48/mo)
+3. Install Nginx Ingress Controller
+4. Build & push all Docker images
+5. Deploy PostgreSQL (StatefulSet) + Redis
+6. Deploy Order Service, Inventory Service, Frontend
+7. Install Prometheus + Grafana monitoring
 
-## Backup Strategy (Bonus Challenge)
+**Estimated cost:** ~$65/month
 
-**Problem**: Only ONE backup call per day allowed.
+### Option 2: Single VPS with Docker Compose
 
-**Solution**: K8s CronJob that:
-1. Runs at midnight
-2. Does `pg_dump` for both databases
-3. Creates single compressed archive
-4. Uploads ONCE to Digital Ocean Spaces
+For a budget-friendly deployment on any VPS (DigitalOcean Droplet, AWS EC2, etc.):
 
 ```bash
-kubectl apply -f k8s/infrastructure/backup-cronjob.yaml
+# SSH into your server
+ssh root@your-server-ip
+
+# Clone and start
+git clone https://github.com/<your-username>/valerix.git
+cd valerix
+cp .env.example .env
+
+# Edit .env to set production passwords
+nano .env
+
+# Start all services
+docker-compose up -d --build
+
+# Verify
+curl http://localhost:3001/health
+curl http://localhost:3002/health
 ```
 
-## Testing
+**Recommended VPS:** 2 vCPU, 4 GB RAM (~$24/month on DigitalOcean)
 
-### Load Testing with K6
-```bash
-cd chaos-scripts
-k6 run --vus 100 --duration 30s load-test.js
-```
+### Backup Strategy
 
-### Integration Tests
-```bash
-npm test
-```
+The K8s manifests include a CronJob ([k8s/infrastructure/backup-cronjob.yaml](k8s/infrastructure/backup-cronjob.yaml))
+that runs a daily `pg_dump` of both databases into a single compressed archive.
+This satisfies the "one backup call per day" constraint by batching both databases
+into one operation.
 
-## Cost Breakdown (Digital Ocean)
+---
 
-- **DOKS Cluster**: 2 nodes × $24/mo = $48
-- **Load Balancer**: $12/mo
-- **Container Registry**: $5/mo
-- **Total**: ~$65/month (well within $100 budget)
+## 🧰 Tech Stack
 
-## Architecture Decisions
+| Layer | Technology | Purpose |
+|---|---|---|
+| **Backend** | Node.js 18 + Express.js | Microservice runtime |
+| **Frontend** | Next.js 14 + Tailwind CSS | Dashboard UI |
+| **Database** | PostgreSQL 15 | Persistent storage (separate DBs per service) |
+| **Cache/Queue** | Redis 7.2 (Streams) | Idempotency cache + async job queue |
+| **Circuit Breaker** | Opossum | Fault tolerance for inter-service calls |
+| **Monitoring** | Prometheus + Grafana | Metrics collection + visualization |
+| **Containerization** | Docker + Docker Compose | Local dev + production packaging |
+| **Orchestration** | Kubernetes (DOKS) | Production deployment |
+| **Load Testing** | k6 | Automated load & chaos tests |
+| **Logging** | Winston | Structured JSON logging |
 
-### Why PostgreSQL over MySQL?
-- JSONB support for flexible schemas
-- Superior transaction handling (critical for financial data)
-- Better concurrent write performance
+---
 
-### Why Redis Streams over Kafka?
-- Lighter footprint (important for budget)
-- Consumer groups support (for distributed processing)
-- Sub-millisecond latency
-- Native K8s deployment (no ZooKeeper complexity)
+## 📜 License
 
-### Why Separate Databases in One Instance?
-- Respects logical boundaries
-- Saves RAM (critical with 2-node cluster)
-- Still allows independent scaling later
-- Zero cross-database queries (proper microservices)
+MIT — feel free to use this as a reference for your own microservice projects.
 
-### The Idempotency Solution
-Traditional approaches fail when:
-1. DB commits ✓
-2. Response prepared ✓
-3. **Network fails before client receives** ✗
-4. Client retries → Duplicate order
+---
 
-Our solution:
-- Client generates UUID before request
-- Server checks Redis cache first
-- Cache response AFTER commit
-- Retry hits cache, returns saved response
-- **Zero duplicates, even with crashes**
+<div align="center">
 
-## Presentation Tips
+**Built with ❤️ for BUET Fest Hackathon 2026**
 
-1. **Start with Grafana open** - show green status
-2. **Create normal orders** - show quick response
-3. **Enable chaos mode** - POST to `/api/admin/chaos`
-4. **Watch dashboard turn RED** - latency spike visible
-5. **Orders still work** - circuit breaker fallback message
-6. **Kill a pod** - `kubectl delete pod <inventory>`
-7. **System recovers** - new pod spawns, health restored
+*Demonstrating production-grade microservice design, chaos engineering, and DevOps practices.*
 
-## Winning Points
-
-✅ **Microservices**: Proper separation with independent scaling  
-✅ **Resilience**: Circuit breaker, idempotency, chaos engineering  
-✅ **DevOps**: Full CI/CD, K8s, monitoring, automated backups  
-✅ **Production-Ready**: Health checks, metrics, graceful degradation  
-✅ **Demo-Friendly**: Chaos mode toggle, visual alerts, live recovery  
-
-## License
-
-MIT
-
-## Team
-
-Built for BUET Fest Hackathon - Champion Edition 🏆
+</div>

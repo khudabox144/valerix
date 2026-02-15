@@ -8,12 +8,9 @@ import {
   ShoppingBagIcon,
   CubeIcon,
   TruckIcon,
-  BoltIcon,
   CheckCircleIcon,
   ClockIcon,
   FireIcon,
-  BeakerIcon,
-  ExclamationTriangleIcon,
   HeartIcon,
 } from '@heroicons/react/24/outline';
 import Navbar from '../components/Navbar';
@@ -49,7 +46,6 @@ export default function Home() {
   const [chaosMode, setChaosMode] = useState('none');
   const [chaosIntensity, setChaosIntensity] = useState(0);
   const [loading, setLoading] = useState(false);
-  const gptEnabled = (process.env.NEXT_PUBLIC_ENABLE_GPT5 === 'true');
 
   useEffect(() => {
     fetchOrders();
@@ -63,8 +59,8 @@ export default function Home() {
     } catch (error) {
       console.error('Error fetching orders:', error);
       setOrders([
-        { id: 1, product: 'ps5', quantity: 2, status: 'completed', timestamp: new Date() },
-        { id: 2, product: 'laptop', quantity: 1, status: 'pending', timestamp: new Date() },
+        { order_id: 'demo-0001', item_id: 'ps5', quantity: 2, status: 'confirmed', created_at: new Date().toISOString() },
+        { order_id: 'demo-0002', item_id: 'laptop', quantity: 1, status: 'pending', created_at: new Date().toISOString() },
       ]);
     }
   };
@@ -143,7 +139,7 @@ export default function Home() {
     setChaosMode(mode);
     
     try {
-      await axios.post(`${ORDER_API}/api/admin/chaos`, { mode });
+      await axios.post(`${INVENTORY_API}/api/admin/chaos`, { mode });
       
       toast.success(`🔥 Chaos mode: ${mode.toUpperCase()}`, {
         position: "bottom-right",
@@ -158,7 +154,7 @@ export default function Home() {
     setChaosIntensity(intensity);
     
     try {
-      await axios.post(`${ORDER_API}/api/admin/chaos`, { failureRate: intensity / 100 });
+      await axios.post(`${INVENTORY_API}/api/admin/chaos`, { failureRate: intensity / 100 });
       
       toast.info(`⚡ Chaos intensity: ${intensity}%`, {
         position: "bottom-right",
@@ -176,15 +172,6 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50 to-pink-50">
       <Navbar onAuthClick={openAuth} />
-      {gptEnabled && (
-        <div className="mx-auto max-w-7xl px-4 mt-4">
-          <div className="flex items-center justify-center">
-            <span className="inline-flex items-center gap-2 rounded-full bg-indigo-100 text-indigo-700 px-4 py-2 text-sm font-medium shadow">
-              <BoltIcon className="h-4 w-4" /> GPT-5 Enabled for all clients
-            </span>
-          </div>
-        </div>
-      )}
       <ToastContainer />
       
       <AuthModal
@@ -311,7 +298,7 @@ export default function Home() {
             <motion.div key="orders" initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }}>
               <div className="space-y-4">
                 {orders.length > 0 ? orders.map((order, index) => (
-                  <OrderCard key={order.id} order={order} index={index} products={products} />
+                  <OrderCard key={order.order_id || index} order={order} index={index} products={products} />
                 )) : (
                   <div className="text-center py-12 bg-white rounded-2xl shadow-lg">
                     <p className="text-gray-500 text-lg">No orders yet. Create your first order!</p>
@@ -409,10 +396,10 @@ function OrderCard({ order, index, products }) {
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <div className="text-4xl">{products.find(p => p.id === order.product)?.image || '📦'}</div>
+          <div className="text-4xl">{products.find(p => p.id === order.item_id)?.image || '📦'}</div>
           <div>
-            <h3 className="font-bold text-lg">Order #{order.id}</h3>
-            <p className="text-gray-600">{products.find(p => p.id === order.product)?.name || order.product}</p>
+            <h3 className="font-bold text-lg">Order #{(order.order_id || '').substring(0, 8)}</h3>
+            <p className="text-gray-600">{products.find(p => p.id === order.item_id)?.name || order.item_id}</p>
             <p className="text-sm text-gray-500">Quantity: {order.quantity}</p>
           </div>
         </div>
@@ -469,146 +456,4 @@ function StatCard({ icon, value, label }) {
   );
 }
 
-function ChaosControlPanel({ chaosMode, chaosIntensity, onModeChange, onIntensityChange }) {
-  return (
-    <div className="space-y-6">
-      {/* Warning Banner */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-2xl p-6 text-white shadow-2xl"
-      >
-        <div className="flex items-center space-x-4">
-          <ExclamationTriangleIcon className="w-12 h-12 animate-pulse" />
-          <div>
-            <h2 className="text-2xl font-black">⚠️ Chaos Engineering Zone</h2>
-            <p className="text-sm opacity-90">Test system resilience by introducing controlled failures</p>
-          </div>
-        </div>
-      </motion.div>
 
-      {/* Chaos Modes */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <ChaosModeCard
-          title="None"
-          description="Normal operation"
-          icon="✅"
-          color="from-green-500 to-emerald-600"
-          active={chaosMode === 'none'}
-          onClick={() => onModeChange('none')}
-        />
-        <ChaosModeCard
-          title="Latency"
-          description="Simulate slow responses"
-          icon="🐌"
-          color="from-yellow-500 to-orange-600"
-          active={chaosMode === 'latency'}
-          onClick={() => onModeChange('latency')}
-        />
-        <ChaosModeCard
-          title="Crash"
-          description="Random service crashes"
-          icon="💥"
-          color="from-red-500 to-pink-600"
-          active={chaosMode === 'crash'}
-          onClick={() => onModeChange('crash')}
-        />
-      </div>
-
-      {/* Intensity Slider */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl shadow-xl p-8"
-      >
-        <h3 className="text-2xl font-bold mb-6 flex items-center">
-          <BoltIcon className="w-8 h-8 mr-3 text-yellow-500" />
-          Failure Intensity: {chaosIntensity}%
-        </h3>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value={chaosIntensity}
-          onChange={(e) => onIntensityChange(parseInt(e.target.value))}
-          className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-          style={{
-            background: `linear-gradient(to right, #8B5CF6 0%, #EC4899 ${chaosIntensity}%, #E5E7EB ${chaosIntensity}%, #E5E7EB 100%)`
-          }}
-        />
-        <div className="flex justify-between mt-4 text-sm text-gray-600">
-          <span>Stable</span>
-          <span>Moderate</span>
-          <span>Extreme</span>
-        </div>
-      </motion.div>
-
-      {/* Chaos Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <ChaosMetric icon="🎯" label="Requests" value="1,234" />
-        <ChaosMetric icon="❌" label="Failures" value="23" />
-        <ChaosMetric icon="♻️" label="Retries" value="45" />
-        <ChaosMetric icon="⏱️" label="Avg Latency" value="120ms" />
-      </div>
-
-      {/* Live Activity */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="bg-gradient-to-br from-gray-900 to-purple-900 rounded-2xl p-6 text-white shadow-xl"
-      >
-        <h3 className="text-xl font-bold mb-4 flex items-center">
-          <BeakerIcon className="w-6 h-6 mr-2" />
-          Live System Activity
-        </h3>
-        <div className="space-y-2 font-mono text-sm">
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            <span className="text-green-400">[INFO]</span>
-            <span className="text-gray-300">Order service healthy</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-            <span className="text-blue-400">[INFO]</span>
-            <span className="text-gray-300">Inventory service responding</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
-            <span className="text-yellow-400">[WARN]</span>
-            <span className="text-gray-300">Chaos mode: {chaosMode}</span>
-          </div>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
-function ChaosModeCard({ title, description, icon, color, active, onClick }) {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.05, y: -5 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={onClick}
-      className={`cursor-pointer rounded-2xl p-6 shadow-xl transition-all ${
-        active ? `bg-gradient-to-br ${color} text-white ring-4 ring-purple-500` : 'bg-white hover:shadow-2xl'
-      }`}
-    >
-      <div className="text-5xl mb-3">{icon}</div>
-      <h3 className={`text-xl font-bold mb-2 ${active ? 'text-white' : 'text-gray-900'}`}>{title}</h3>
-      <p className={`text-sm ${active ? 'text-white opacity-90' : 'text-gray-600'}`}>{description}</p>
-    </motion.div>
-  );
-}
-
-function ChaosMetric({ icon, label, value }) {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.05 }}
-      className="bg-white rounded-xl shadow-lg p-4 text-center"
-    >
-      <div className="text-3xl mb-2">{icon}</div>
-      <div className="text-2xl font-black text-purple-600">{value}</div>
-      <div className="text-sm text-gray-600">{label}</div>
-    </motion.div>
-  );
-}

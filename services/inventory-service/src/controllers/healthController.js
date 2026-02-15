@@ -23,9 +23,6 @@ const healthCheck = async (req, res) => {
       database: dbHealth.details || {},
       redis: redisHealth.details || {},
     },
-    features: {
-      gpt_model: process.env.ENABLE_GPT5 === 'true' ? 'gpt-5' : undefined,
-    },
   };
 
   if (!dbHealth.healthy) {
