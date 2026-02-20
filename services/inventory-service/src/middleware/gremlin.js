@@ -68,7 +68,10 @@ const gremlinMiddleware = async (req, res, next) => {
           });
         } else {
           // Connection reset - just close the connection without response
-          return req.socket.destroy();
+          if (req.socket && !req.socket.destroyed) {
+            req.socket.destroy();
+          }
+          return;
         }
       }
 
@@ -125,7 +128,9 @@ const simulatePartialFailure = (req, res) => {
         return true; // Indicate that response was sent
       } else {
         // Destroy connection without response
-        res.socket.destroy();
+        if (res.socket && !res.socket.destroyed) {
+          res.socket.destroy();
+        }
         return true; // Indicate that connection was destroyed
       }
     }

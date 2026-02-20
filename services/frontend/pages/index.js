@@ -138,8 +138,19 @@ export default function Home() {
   const handleChaosMode = async (mode) => {
     setChaosMode(mode);
     
+    const presets = {
+      none: { latency: false, latency_ms: 0, crash_rate: 0, partial_failure_rate: 0 },
+      mild: { latency: true, latency_ms: 2000, crash_rate: 0.1, partial_failure_rate: 0.05 },
+      moderate: { latency: true, latency_ms: 5000, crash_rate: 0.3, partial_failure_rate: 0.2 },
+      extreme: { latency: true, latency_ms: 10000, crash_rate: 0.5, partial_failure_rate: 0.3 },
+    };
+
     try {
-      await axios.post(`${INVENTORY_API}/api/admin/chaos`, { mode });
+      if (mode === 'none') {
+        await axios.delete(`${INVENTORY_API}/api/admin/chaos`);
+      } else {
+        await axios.post(`${INVENTORY_API}/api/admin/chaos`, presets[mode] || presets.moderate);
+      }
       
       toast.success(`🔥 Chaos mode: ${mode.toUpperCase()}`, {
         position: "bottom-right",
@@ -154,7 +165,12 @@ export default function Home() {
     setChaosIntensity(intensity);
     
     try {
-      await axios.post(`${INVENTORY_API}/api/admin/chaos`, { failureRate: intensity / 100 });
+      await axios.post(`${INVENTORY_API}/api/admin/chaos`, {
+        latency: intensity > 0,
+        latency_ms: 3000,
+        crash_rate: intensity / 100,
+        partial_failure_rate: (intensity / 100) * 0.5,
+      });
       
       toast.info(`⚡ Chaos intensity: ${intensity}%`, {
         position: "bottom-right",
@@ -404,9 +420,12 @@ function OrderCard({ order, index, products }) {
           </div>
         </div>
         <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-bold ${
-          order.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+          order.status === 'confirmed' ? 'bg-green-100 text-green-800' 
+          : order.status === 'queued' ? 'bg-blue-100 text-blue-800' 
+          : order.status === 'failed' ? 'bg-red-100 text-red-800' 
+          : 'bg-yellow-100 text-yellow-800'
         }`}>
-          {order.status === 'completed' ? <CheckCircleIcon className="w-5 h-5 mr-2" /> : <ClockIcon className="w-5 h-5 mr-2" />}
+          {order.status === 'confirmed' ? <CheckCircleIcon className="w-5 h-5 mr-2" /> : <ClockIcon className="w-5 h-5 mr-2" />}
           {order.status}
         </span>
       </div>
